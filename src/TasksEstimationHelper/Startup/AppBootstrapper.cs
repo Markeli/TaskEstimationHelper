@@ -1,19 +1,41 @@
 ﻿using Curiosity.Configuration;
 using Curiosity.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using TasksEstimationHelper.CLI;
+using TasksEstimationHelper.Configuration;
+using TasksEstimationHelper.Core.ProgressReport;
 
 namespace TasksEstimationHelper.Startup;
 
-public class AppBootstrapper : CuriosityAppBootstrapper<AppCLIArgs, CuriosityAppConfiguration>
+public class AppBootstrapper : CuriosityToolAppBootstrapper<AppCLIArgs, AppConfiguration>
 {
-    protected override Task<int> RunInternalAsync(
+    public AppBootstrapper()
+    {
+        ConfigureServices((services, _) =>
+        {
+            services.AddSingleton<YouTrackProgressReportEstimationCorrector>();
+            services.AddSingleton<ProgressReportStatisticsConsolePrinter>();
+        });
+    }
+
+    protected override async Task<int> ExecuteAsync(
+        IServiceProvider serviceProvider,
         string[] rawArguments,
         AppCLIArgs arguments,
-        CuriosityAppConfiguration configuration,
-        IConfigurationProvider<CuriosityAppConfiguration> configurationProvider,
-        string customContentRootDirectory,
+        AppConfiguration configuration,
         CancellationToken cancellationToken = new())
     {
-        throw new NotImplementedException();
+        if (String.IsNullOrWhiteSpace(arguments.ProgressReportPath))
+            throw new ArgumentException("Path to report wasn't specified");
+
+        var statisticsCorrector = serviceProvider.GetRequiredService<YouTrackProgressReportEstimationCorrector>();
+        var reportStatistics = await statisticsCorrector.BuildReportStatisticsAsync(
+            arguments.ProgressReportPath,
+            cancellationToken);
+
+        var printer = serviceProvider.GetRequiredService<ProgressReportStatisticsConsolePrinter>();
+        printer.Print(reportStatistics);
+
+        return CuriosityExitCodes.Success;
     }
 }
