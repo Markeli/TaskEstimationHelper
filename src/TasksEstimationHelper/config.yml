@@ -1,0 +1,4 @@
+# каталоги для логов
+Log:
+  LogConfigurationPath: ./NLog.config
+  LogOutputDirectory: ./logs
