@@ -1,4 +1,5 @@
 ﻿using Curiosity.Tools;
+using MathNet.Numerics.Statistics;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic.FileIO;
 using TasksEstimationHelper.Guards;
@@ -20,9 +21,7 @@ public class YouTrackProgressReportEstimationCorrector
         _logger = logger;
     }
 
-    public async Task<ProgressReportStatistics> BuildReportStatisticsAsync(
-        string reportFilePath,
-        CancellationToken cancellationToken = default)
+    public ProgressReportStatistics BuildReportStatistics(string reportFilePath)
     {
         reportFilePath.AssertNotEmpty(nameof(reportFilePath));
 
@@ -108,8 +107,11 @@ public class YouTrackProgressReportEstimationCorrector
 
 
         var globalTotalEstimationMin = 0;
+        var globalTotalEstimationMinOnlyEstimated = 0;
         var globalTotalSpentTimeMin = 0;
+        var globalTotalSpentTimeMinOnlyEstimated = 0;
         var globalAllRatioValues = new List<double>();
+        var globalAllRatioValuesOnlyEstimated = new List<double>();
         var globalMinRatio = double.MaxValue;
         var globalMaxRatio = double.MinValue;
 
@@ -123,9 +125,12 @@ public class YouTrackProgressReportEstimationCorrector
             }
 
             var totalEstimationMin = 0;
+            var totalEstimationMinOnlyEstimated = 0;
             var totalSpentTimeMin = 0;
+            var totalSpentTimeMinOnlyEstimated = 0;
 
             var allRatioValues = new List<double>(personTasks.Count);
+            var allRatioValuesOnlyEstimated = new List<double>(personTasks.Count);
             var minRatio = double.MaxValue;
             var maxRatio = double.MinValue;
 
@@ -154,23 +159,51 @@ public class YouTrackProgressReportEstimationCorrector
                 allRatioValues.Add(personTask.TimeStatistics.EstimationTimeRatio);
                 globalAllRatioValues.Add(personTask.TimeStatistics.EstimationTimeRatio);
 
+                if (personTask.TimeStatistics.EstimationMin > 0)
+                {
+                    allRatioValuesOnlyEstimated.Add(personTask.TimeStatistics.EstimationTimeRatio);
+                    globalAllRatioValuesOnlyEstimated.Add(personTask.TimeStatistics.EstimationTimeRatio);
+                }
+
                 totalEstimationMin += personTask.TimeStatistics.EstimationMin;
                 globalTotalEstimationMin += personTask.TimeStatistics.EstimationMin;
 
                 totalSpentTimeMin += personTask.TimeStatistics.SpentTimeMin;
                 globalTotalSpentTimeMin += personTask.TimeStatistics.SpentTimeMin;
+
+                if (personTask.TimeStatistics.EstimationMin > 0)
+                {
+                    totalEstimationMinOnlyEstimated += personTask.TimeStatistics.EstimationMin;
+                    globalTotalEstimationMinOnlyEstimated += personTask.TimeStatistics.EstimationMin;
+
+                    totalSpentTimeMinOnlyEstimated += personTask.TimeStatistics.SpentTimeMin;
+                    globalTotalSpentTimeMinOnlyEstimated += personTask.TimeStatistics.SpentTimeMin;
+
+                }
             }
 
+            allRatioValues.Sort();
+            var medianRatio = allRatioValues.Median();
+            var p75Ratio = allRatioValues.Percentile(75);
+            var p90Ratio = allRatioValues.Percentile(90);
+            var p95Ratio = allRatioValues.Percentile(95);
+            var p99Ratio = allRatioValues.Percentile(99);
             var averageRatioPerTasks = allRatioValues.Average();
-            var medianRatio = CalculateMedian(allRatioValues);
 
             var personTotalTimeStatistics = new TimeStatistics(totalEstimationMin, totalSpentTimeMin);
+            var personTotalTimeStatisticsOnlyEstimated = new TimeStatistics(totalEstimationMinOnlyEstimated, totalSpentTimeMinOnlyEstimated);
             var personEstimationSpentRatioStatistics = new EstimationSpentRatioStatistics(
                 averageRatioPerTasks,
+                allRatioValuesOnlyEstimated.Average(),
                 personTotalTimeStatistics.EstimationTimeRatio,
+                personTotalTimeStatisticsOnlyEstimated.EstimationTimeRatio,
                 minRatio,
                 maxRatio,
-                medianRatio);
+                medianRatio,
+                p75Ratio,
+                p90Ratio,
+                p95Ratio,
+                p99Ratio);
 
             personStatistics.Add(new PersonStatistics(
                 personName,
@@ -179,16 +212,23 @@ public class YouTrackProgressReportEstimationCorrector
                 personEstimationSpentRatioStatistics));
         }
 
+        globalAllRatioValues.Sort();
         var globalAverageRatioPerTasks = globalAllRatioValues.Average();
-        var globalMedianRatio = CalculateMedian(globalAllRatioValues);
         var globalTimStatistics = new TimeStatistics(globalTotalEstimationMin, globalTotalSpentTimeMin);
+        var globalTimStatisticsOnlyEstimated = new TimeStatistics(globalTotalEstimationMinOnlyEstimated, globalTotalSpentTimeMinOnlyEstimated);
 
         var globalEstimationSpentRatioStatistics = new EstimationSpentRatioStatistics(
             globalAverageRatioPerTasks,
+            globalAllRatioValuesOnlyEstimated.Average(),
             globalTimStatistics.EstimationTimeRatio,
+            globalTimStatisticsOnlyEstimated.EstimationTimeRatio,
             globalMinRatio,
             globalMaxRatio,
-            globalMedianRatio);
+            globalAllRatioValues.Median(),
+            globalAllRatioValues.Percentile(75),
+            globalAllRatioValues.Percentile(90),
+            globalAllRatioValues.Percentile(95),
+            globalAllRatioValues.Percentile(99));
 
         return new ProgressReportStatistics(
             personStatistics,
@@ -199,15 +239,5 @@ public class YouTrackProgressReportEstimationCorrector
     private static string? GetCellValue(string? cellValue)
     {
         return cellValue?.Trim().Trim('"').Trim().ToNullIfWhiteSpace();
-    }
-
-    private static double CalculateMedian(List<double> values)
-    {
-        values.Sort();
-
-        var middleIndex = values.Count / 2;
-        return values.Count % 2 != 0
-            ? values[middleIndex]
-            : (values[middleIndex] + values[middleIndex - 1]) / 2;
     }
 }

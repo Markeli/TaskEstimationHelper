@@ -1,4 +1,5 @@
 ﻿using ConsoleTables;
+using Curiosity.Tools;
 
 namespace TasksEstimationHelper.Core.ProgressReport;
 
@@ -34,7 +35,7 @@ public class ProgressReportStatisticsConsolePrinter
                 var taskStatistics = personsStatistic.Tasks[i];
                 table.AddRow(
                     taskStatistics.TaskCode,
-                    taskStatistics.TaskName,
+                    taskStatistics.TaskName.TrimLimit(75),
                     ToHourMinString(taskStatistics.TimeStatistics.EstimationMin),
                     ToHourMinString(taskStatistics.TimeStatistics.SpentTimeMin),
                     ToHourMinString(taskStatistics.TimeStatistics.EstimationSpentDeltaMin, true),
@@ -60,11 +61,25 @@ public class ProgressReportStatisticsConsolePrinter
                 ToPercentageString(personsStatistic.EstimationSpentRatioStatistics.AveragePerTasks));
             table.AddRow(
                 null,
+                "AVERAGE Ratio per tasks (only estimated!)",
+                null,
+                null,
+                null,
+                ToPercentageString(personsStatistic.EstimationSpentRatioStatistics.AveragePerTasksOnlyEstimated));
+            table.AddRow(
+                null,
                 "AVERAGE Ratio per total",
                 null,
                 null,
                 null,
                 ToPercentageString(personsStatistic.EstimationSpentRatioStatistics.AveragePerTotal));
+            table.AddRow(
+                null,
+                "AVERAGE Ratio per total (only estimated!)",
+                null,
+                null,
+                null,
+                ToPercentageString(personsStatistic.EstimationSpentRatioStatistics.AveragePerTotalOnlyEstimated));
             table.AddRow(
                 null,
                 "Min Ratio",
@@ -86,6 +101,41 @@ public class ProgressReportStatisticsConsolePrinter
                 null,
                 null,
                 ToPercentageString(personsStatistic.EstimationSpentRatioStatistics.Median));
+            table.AddRow(
+                null,
+                "P75 Ratio",
+                null,
+                null,
+                null,
+                ToPercentageString(personsStatistic.EstimationSpentRatioStatistics.P75));
+            table.AddRow(
+                null,
+                "P90 Ratio",
+                null,
+                null,
+                null,
+                ToPercentageString(personsStatistic.EstimationSpentRatioStatistics.P90));
+            table.AddRow(
+                null,
+                "P95 Ratio",
+                null,
+                null,
+                null,
+                ToPercentageString(personsStatistic.EstimationSpentRatioStatistics.P95));
+            table.AddRow(
+                null,
+                "P99 Ratio",
+                null,
+                null,
+                null,
+                ToPercentageString(personsStatistic.EstimationSpentRatioStatistics.P99));
+            table.AddRow(
+                null,
+                "Correction factor",
+                null,
+                null,
+                null,
+                ToPercentageString(personsStatistic.EstimationSpentRatioStatistics.CorrectionFactor));
         }
 
         table.AddRow(
@@ -107,11 +157,25 @@ public class ProgressReportStatisticsConsolePrinter
             ToPercentageString(statistics.TotalEstimationSpentRatioStatistics.AveragePerTasks));
         table.AddRow(
             null,
+            "AVERAGE Ratio per tasks (only estimated!)",
+            null,
+            null,
+            null,
+            ToPercentageString(statistics.TotalEstimationSpentRatioStatistics.AveragePerTasksOnlyEstimated));
+        table.AddRow(
+            null,
             "AVERAGE Ratio per total",
             null,
             null,
             null,
             ToPercentageString(statistics.TotalEstimationSpentRatioStatistics.AveragePerTotal));
+        table.AddRow(
+            null,
+            "AVERAGE Ratio per total (only estimated!)",
+            null,
+            null,
+            null,
+            ToPercentageString(statistics.TotalEstimationSpentRatioStatistics.AveragePerTotalOnlyEstimated));
         table.AddRow(
             null,
             "AVERAGE Ratio by members average",
@@ -141,6 +205,41 @@ public class ProgressReportStatisticsConsolePrinter
             null,
             ToPercentageString(statistics.TotalEstimationSpentRatioStatistics.Median));
 
+        table.AddRow(
+            null,
+            "P75 Ratio",
+            null,
+            null,
+            null,
+            ToPercentageString(statistics.TotalEstimationSpentRatioStatistics.P75));
+        table.AddRow(
+            null,
+            "P90 Ratio",
+            null,
+            null,
+            null,
+            ToPercentageString(statistics.TotalEstimationSpentRatioStatistics.P90));
+        table.AddRow(
+            null,
+            "P95 Ratio",
+            null,
+            null,
+            null,
+            ToPercentageString(statistics.TotalEstimationSpentRatioStatistics.P95));
+        table.AddRow(
+            null,
+            "P99 Ratio",
+            null,
+            null,
+            null,
+            ToPercentageString(statistics.TotalEstimationSpentRatioStatistics.P99));
+        table.AddRow(
+            null,
+            "Correction factor",
+            null,
+            null,
+            null,
+            ToPercentageString(statistics.TotalEstimationSpentRatioStatistics.CorrectionFactor));
         table.Write();
     }
 

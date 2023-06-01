@@ -1,5 +1,4 @@
-﻿using Curiosity.Configuration;
-using Curiosity.Hosting;
+﻿using Curiosity.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using TasksEstimationHelper.CLI;
 using TasksEstimationHelper.Configuration;
@@ -18,7 +17,7 @@ public class AppBootstrapper : CuriosityToolAppBootstrapper<AppCLIArgs, AppConfi
         });
     }
 
-    protected override async Task<int> ExecuteAsync(
+    protected override Task<int> ExecuteAsync(
         IServiceProvider serviceProvider,
         string[] rawArguments,
         AppCLIArgs arguments,
@@ -29,13 +28,11 @@ public class AppBootstrapper : CuriosityToolAppBootstrapper<AppCLIArgs, AppConfi
             throw new ArgumentException("Path to report wasn't specified");
 
         var statisticsCorrector = serviceProvider.GetRequiredService<YouTrackProgressReportEstimationCorrector>();
-        var reportStatistics = await statisticsCorrector.BuildReportStatisticsAsync(
-            arguments.ProgressReportPath,
-            cancellationToken);
+        var reportStatistics = statisticsCorrector.BuildReportStatistics(arguments.ProgressReportPath);
 
         var printer = serviceProvider.GetRequiredService<ProgressReportStatisticsConsolePrinter>();
         printer.Print(reportStatistics);
 
-        return CuriosityExitCodes.Success;
+        return Task.FromResult(CuriosityExitCodes.Success);
     }
 }
