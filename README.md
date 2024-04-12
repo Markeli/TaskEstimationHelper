@@ -1,5 +1,4 @@
 # TaskEstimationHelper
-Console app that reads YouTrack CSV time report and calculates estimation statistics 
 
 Helper tool to estimate tasks. Analyze progress report from YouTrack, calculates ratio between estimation and spent time.
 
