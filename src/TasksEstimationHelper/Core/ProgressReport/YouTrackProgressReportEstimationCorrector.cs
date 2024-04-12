@@ -11,7 +11,7 @@ namespace TasksEstimationHelper.Core.ProgressReport;
 /// </summary>
 public class YouTrackProgressReportEstimationCorrector
 {
-    protected readonly ILogger _logger;
+    private readonly ILogger _logger;
 
     /// <inheritdoc cref="YouTrackProgressReportEstimationCorrector"/>
     public YouTrackProgressReportEstimationCorrector(ILogger logger)
